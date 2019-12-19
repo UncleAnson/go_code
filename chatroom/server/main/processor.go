@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"golang_code/src/chatroom/common/message"
-	process2 "golang_code/src/chatroom/server/process" //和main/main中的process函数重名
+	process2 "golang_code/src/chatroom/server/process"
 	"golang_code/src/chatroom/server/utils"
 	"io"
 	"net"
@@ -52,13 +52,13 @@ func (this *Processor) process2() (err error) {
 			} else {
 				fmt.Println("readPkg err =", err)
 			}
-			return
+			return err
 		}
 		fmt.Println("接收到消息内容为：", mes)
 		err = this.serverProcessMes(mes)
 		if err != nil {
 			fmt.Println("serverProcessMes err =", err)
-			return
+			return err
 		}
 
 	}

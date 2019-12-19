@@ -114,12 +114,12 @@ import (
 //}
 
 func process(conn net.Conn) {
-	//延时关闭
-	defer conn.Close()
 	// 调用总控，创建
 	processor := &Processor{
 		Conn: conn,
 	}
+	//延时关闭
+	defer conn.Close()
 	err := processor.process2()
 	if err != nil {
 		fmt.Println("客户端和服务端通讯协程错误err =", err)
