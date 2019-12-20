@@ -82,7 +82,7 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 	var loginResMes message.LoginResMes
 	err = json.Unmarshal([]byte(mes.Data), &loginResMes)
 	if err != nil {
-		fmt.Println("响应失败 err =", err)
+		fmt.Println("反序列化失败 err =", err)
 	} else if loginResMes.Code == 200 {
 		//fmt.Println("登录成功")
 		//2.这里还需要在客户端启动一个协程，该协程保持和服务器端的通讯
@@ -96,5 +96,5 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 	} else {
 		fmt.Println(loginResMes.Error)
 	}
-	return nil
+	return
 }

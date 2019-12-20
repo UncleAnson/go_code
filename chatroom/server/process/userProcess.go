@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang_code/src/chatroom/common/message"
+	"golang_code/src/chatroom/server/model"
 	"golang_code/src/chatroom/server/utils"
 	"net"
 )
@@ -26,15 +27,33 @@ func (this *UserProcess) ServerProcessLogin(mes message.Message) (err error) {
 	resMes.Type = message.LoginResMesType
 	//2.声明一个LoginResMes，并完成赋值
 	var loginResMes message.LoginResMes
-	if loginMes.UserId == 100 && loginMes.UserPwd == "123456" {
-		//合法
-		loginResMes.Code = 200
-	} else {
-		//不合法
-		//fmt.Println("用户名 密码 不合法")
-		loginResMes.Code = 500
-		loginResMes.Error = "请注册再使用"
+	//if loginMes.UserId == 100 && loginMes.UserPwd == "123456" {
+	//	//合法
+	//	loginResMes.Code = 200
+	//} else {
+	//	//不合法
+	//	//fmt.Println("用户名 密码 不合法")
+	//	loginResMes.Code = 500
+	//	loginResMes.Error = "请注册再使用"
+	//
+	//}
 
+	//使用model.MyUserDao.Login()到redis验证
+	user, err := model.MyUserDao.Login(loginMes.UserId, loginMes.UserPwd)
+	if err != nil {
+		if err == model.ERROR_USER_NOTEXISTS {
+			loginResMes.Code = 500
+			loginResMes.Error = err.Error()
+		} else if err == model.ERROR_USER_PWD {
+			loginResMes.Code = 403
+			loginResMes.Error = err.Error()
+		} else {
+			loginResMes.Code = 505
+			loginResMes.Error = "服务器内部错误"
+		}
+	} else {
+		loginResMes.Code = 200
+		fmt.Println(user, "登录成功")
 	}
 	//3.序列化LoginResMes
 	data, err := json.Marshal(loginResMes)
@@ -51,7 +70,7 @@ func (this *UserProcess) ServerProcessLogin(mes message.Message) (err error) {
 	}
 	// 5.发送数据
 	// 因为修改为分层模式，需要创建一个Transfer实例，然后读取
-	tf:=&utils.Transfer{
+	tf := &utils.Transfer{
 		Conn: this.Conn,
 	}
 	err = tf.WritePkg(data)

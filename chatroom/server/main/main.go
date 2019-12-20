@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"golang_code/src/chatroom/server/model"
 	"net"
+	"time"
 )
 
 //func serverProcessLogin(conn net.Conn, mes message.Message) (err error) {
@@ -128,7 +130,18 @@ func process(conn net.Conn) {
 
 }
 
+// 完成对UserDaod的初始化任务
+func initUserDao() {
+	// 调用工厂函数，
+	// pool为redis.go中的全局变量
+	model.MyUserDao = model.NewUserDao(pool)
+}
+
 func main() {
+	// 初始化一个全局的redis.Pool
+	initPool("localhost:6379", 16, 0, 300*time.Second)
+	// 调用工厂函数，初始化全局的UserDao变量
+	initUserDao()
 	// 提示
 	fmt.Println("服务器在8889端口监听")
 	listen, err := net.Listen("tcp", "127.0.0.1:8889")

@@ -19,7 +19,7 @@ type Transfer struct {
 
 func (this *Transfer) ReadPkg() (mes message.Message, err error) {
 	//buf := make([]byte, 8096)
-	fmt.Println("读取客户端发送的数据...")
+	fmt.Println("等待读取客户端发送的数据...")
 	n, err := this.Conn.Read(this.Buf[:4])
 	//fmt.Println(n) // 打印读取的byte类型长度
 	if n != 4 || err != nil {

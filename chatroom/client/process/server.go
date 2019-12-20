@@ -9,7 +9,7 @@ import (
 
 // 显示登录成功后的界面
 func ShowMenu(userId int) {
-	fmt.Printf("-------------恭喜%v登录成功-------------", userId)
+	fmt.Printf("-------------恭喜[%v]登录成功-------------\n", userId)
 	fmt.Println("-------------1.显示在线用户列表-----------")
 	fmt.Println("-------------2.发送消息-------------")
 	fmt.Println("-------------3.信息列表-------------")
@@ -40,7 +40,7 @@ func ServerProcessMes(conn net.Conn) {
 		Conn: conn,
 	}
 	for {
-		fmt.Println("客户端 %s 正在读取服务器发送的消息", conn.RemoteAddr().String())
+		fmt.Printf("[协程]客户端 %s 正在读取服务器发送的消息\n", conn.RemoteAddr().String())
 		mes, err := tf.ReadPkg()
 		if err != nil {
 			fmt.Println("tf.ReadPkg err =", err)
