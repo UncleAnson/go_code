@@ -157,6 +157,11 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 			//	continue
 			//}
 			fmt.Println("用户id：", v)
+			user := message.User{
+				UserId:     v,
+				UserStatus: message.UserOnline,
+			}
+			onlineUsers[v] = &user
 		}
 		go ServerProcessMes(conn)
 		//1.显示登录成功后的菜单

@@ -14,6 +14,52 @@ type UserProcess struct {
 	UserId int
 }
 
+func (this *UserProcess) NotifyOthersOnlineUser(userId int) {
+	for id, up := range userMgr.onlineUsers {
+		// 对在线用户进行遍历推送
+		if id == userId {
+			continue
+		}
+		//开始通知
+		up.NotifyMeOnline(userId)
+	}
+}
+
+func (this *UserProcess) NotifyMeOnline(userId int) {
+	// 组装消息实体
+	var mes message.Message
+	mes.Type = message.NotifyUserStatusMesType
+
+	var notifyUserStatusMes message.NotifyUserStatusMes
+	notifyUserStatusMes.UserId = userId
+	notifyUserStatusMes.Status = message.UserOnline
+	// 将notifyUserStatusMes序列化
+	data, err := json.Marshal(notifyUserStatusMes)
+	if err != nil {
+		fmt.Println("json.Marshal err =", err)
+		return
+	}
+	mes.Data = string(data)
+
+	//将mes序列化
+	data, err = json.Marshal(mes)
+
+	if err != nil {
+		fmt.Println("json.Marshal err =", err)
+		return
+	}
+
+	//发送
+	tf := utils.Transfer{
+		Conn: this.Conn,
+	}
+	err = tf.WritePkg(data)
+	if err != nil {
+		fmt.Println()
+		return
+	}
+}
+
 // 专门处理登录请求
 func (this *UserProcess) ServerProcessLogin(mes message.Message) (err error) {
 	// 从mes中取出mes.Data，并直接反序列化成LoginMes
@@ -57,7 +103,10 @@ func (this *UserProcess) ServerProcessLogin(mes message.Message) (err error) {
 		//～用户登录成功，将该登录成功用户放入到UserMgr中
 		// 但是缺少userId
 		this.UserId = loginMes.UserId
+		// 作为一个功能点，独立存在于userMgr.go中
 		userMgr.AddOnlineUsers(this)
+		// 通知其他的在线用户
+		this.NotifyOthersOnlineUser(loginMes.UserId)
 		// 将当前在线用户返回给登录用户
 		for id, _ := range userMgr.onlineUsers {
 			loginResMes.UsersId = append(loginResMes.UsersId, id) //UsersId切片

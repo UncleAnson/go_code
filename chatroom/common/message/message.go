@@ -3,10 +3,18 @@ package message
 import "golang_code/src/chatroom/server/model"
 
 const (
-	LoginMesType       = "LoginMes"
-	LoginResMesType    = "LoginResMes"
-	RegisterMesType    = "RegisterMes"
-	RegisterResMesType = "RegisterResMes"
+	LoginMesType            = "LoginMes"
+	LoginResMesType         = "LoginResMes"
+	RegisterMesType         = "RegisterMes"
+	RegisterResMesType      = "RegisterResMes"
+	NotifyUserStatusMesType = "NotifyUserStatusMes"
+)
+
+//～定义用户状态常量
+const (
+	UserOnline = iota
+	UserOffline
+	UserBustStatus
 )
 
 type Message struct {
@@ -35,4 +43,10 @@ type RegisterMes struct {
 type RegisterResMes struct {
 	Code  int    `json:"code"` //400表示用户已被占用，200表示注册成功
 	Error string `json:"error"`
+}
+
+// 为了配合服务器端推送用户状态的通知
+type NotifyUserStatusMes struct {
+	UserId int `json:"userId"`
+	Status int `json:"status"`
 }

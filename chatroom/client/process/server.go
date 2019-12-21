@@ -3,6 +3,7 @@ package process
 import (
 	"fmt"
 	"golang_code/src/chatroom/client/utils"
+	"golang_code/src/chatroom/common/message"
 	"net"
 	"os"
 )
@@ -47,6 +48,15 @@ func ServerProcessMes(conn net.Conn) {
 			return
 		}
 		fmt.Println("读取消息 mes =", mes)
+
+		switch mes.Type {
+		case message.NotifyUserStatusMesType:
+			//处理
+			//1.取出NotifyUserStatusMes
+			//2.保存到客户端本地的map中
+		default:
+			fmt.Println("服务器端返回了未知类型")
+		}
 	}
 
 }
