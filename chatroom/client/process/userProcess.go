@@ -7,13 +7,77 @@ import (
 	"golang_code/src/chatroom/client/utils"
 	"golang_code/src/chatroom/common/message"
 	"net"
+	"os"
 )
 
 type UserProcess struct {
 }
 
-//关联一个用户登录的方法
+func (this *UserProcess) Register(userId int, userPwd string, userName string) (err error) {
 
+	//1.客户端dial连接到服务器
+	conn, err := net.Dial("tcp", "127.0.0.1:8889")
+	if err != nil {
+		fmt.Println("net.Dial err=", err)
+		return
+	}
+	// 延时关闭
+	defer conn.Close()
+
+	//2.准备通过conn发送消息给服务器
+	var mes message.Message
+	mes.Type = message.RegisterMesType
+	//3.创建RegisterMes结构体
+	var RegisterMes message.RegisterMes
+	RegisterMes.User.UserId = userId
+	RegisterMes.User.UserPwd = userPwd
+	RegisterMes.User.UserName = userName
+	//4.将RegisterMes序列化
+	data, err := json.Marshal(RegisterMes)
+	if err != nil {
+		fmt.Println("json.marshal err=", err)
+		return
+	}
+	//5.把data赋给mes.Data字段
+	mes.Data = string(data)
+	//6.将mes序列化
+	data, err = json.Marshal(mes)
+	if err != nil {
+		fmt.Println("json.marshal err=", err)
+		return
+	}
+
+	// ~创建一个Transfer实例
+	tf := utils.Transfer{
+		Conn: conn,
+	}
+	//发送data给服务器端
+	err = tf.WritePkg(data)
+	if err != nil {
+		fmt.Println("注册发送信息错误 err =", err)
+		return
+	}
+	mes, err = tf.ReadPkg() //mes是RegisterResMes
+	if err != nil {
+		fmt.Println("readPkg(conn) err = ", err)
+		return
+	}
+	// 将mes.Data反序列化为 LoginResMes
+	var registerResMes message.RegisterResMes
+	err = json.Unmarshal([]byte(mes.Data), &registerResMes)
+	if err != nil {
+		fmt.Println("反序列化失败 err =", err)
+	} else if registerResMes.Code == 200 {
+		fmt.Println("注册成功，请重新登录")
+		os.Exit(0)
+	} else {
+		fmt.Println(registerResMes.Error)
+		os.Exit(0)
+	}
+	return
+}
+
+//关联一个用户登录的方法
 func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 	//fmt.Printf("userId = %d, userPwd = %s\n", userId, userPwd)
 	//1.客户端dial连接到服务器
@@ -87,6 +151,13 @@ func (this *UserProcess) Login(userId int, userPwd string) (err error) {
 		//fmt.Println("登录成功")
 		//2.这里还需要在客户端启动一个协程，该协程保持和服务器端的通讯
 		//如果服务器有数据推送给客户端，则接收并显示在客户端的终端
+		// ～显示在线用户列表
+		for _, v := range loginResMes.UsersId {
+			//if v == userId {//等于自己不打印
+			//	continue
+			//}
+			fmt.Println("用户id：", v)
+		}
 		go ServerProcessMes(conn)
 		//1.显示登录成功后的菜单
 		for {

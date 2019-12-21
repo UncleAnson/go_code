@@ -10,7 +10,8 @@ import (
 )
 
 type UserProcess struct {
-	Conn net.Conn
+	Conn   net.Conn
+	UserId int
 }
 
 // 专门处理登录请求
@@ -53,6 +54,14 @@ func (this *UserProcess) ServerProcessLogin(mes message.Message) (err error) {
 		}
 	} else {
 		loginResMes.Code = 200
+		//～用户登录成功，将该登录成功用户放入到UserMgr中
+		// 但是缺少userId
+		this.UserId = loginMes.UserId
+		userMgr.AddOnlineUsers(this)
+		// 将当前在线用户返回给登录用户
+		for id, _ := range userMgr.onlineUsers {
+			loginResMes.UsersId = append(loginResMes.UsersId, id) //UsersId切片
+		}
 		fmt.Println(user, "登录成功")
 	}
 	//3.序列化LoginResMes
@@ -61,6 +70,58 @@ func (this *UserProcess) ServerProcessLogin(mes message.Message) (err error) {
 		fmt.Println("json.Marshal err =", err)
 		return
 	}
+	//4.将data赋值给resMes的Data
+	resMes.Data = string(data) // string resMes.Data []byte data
+	data, err = json.Marshal(resMes)
+	if err != nil {
+		fmt.Println("json.Marshal err =", err)
+		return
+	}
+	// 5.发送数据
+	// 因为修改为分层模式，需要创建一个Transfer实例，然后读取
+	tf := &utils.Transfer{
+		Conn: this.Conn,
+	}
+	err = tf.WritePkg(data)
+	return
+}
+
+func (this *UserProcess) ServerProcessRegister(mes message.Message) (err error) {
+	var registerMes message.RegisterMes
+	err = json.Unmarshal([]byte(mes.Data), &registerMes)
+	if err != nil {
+		fmt.Println("json.Unmarshal err =", err)
+		return
+	}
+
+	// 处理注册，并且发送给客户端
+	// 1.声明一个resMes
+	var resMes message.Message
+	resMes.Type = message.RegisterResMesType
+	//2.声明一个registerResMes，并完成赋值
+	var registerResMes message.LoginResMes
+	err = model.MyUserDao.Register(&registerMes.User)
+	if err != nil {
+		if err == model.ERROR_USER_EXISTS {
+			registerResMes.Code = 505
+			registerResMes.Error = err.Error()
+
+		} else {
+			registerResMes.Code = 506
+			registerResMes.Error = "注册发生未知错误"
+			fmt.Println(err.Error())
+		}
+	} else {
+		registerResMes.Code = 200
+	}
+
+	// 将registerResMes进行反序列化
+	data, err := json.Marshal(registerResMes)
+	if err != nil {
+		fmt.Println("json.Marshal err =", err)
+		return
+	}
+
 	//4.将data赋值给resMes的Data
 	resMes.Data = string(data) // string resMes.Data []byte data
 	data, err = json.Marshal(resMes)

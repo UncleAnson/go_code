@@ -8,6 +8,8 @@ import (
 // 定义全局变量，因为很多函数需要用到
 var userId int
 var userPwd string
+var userPwd2 string
+var userName string
 
 func main() {
 	var key int
@@ -23,7 +25,6 @@ func main() {
 		fmt.Scanln(&key)
 		switch key {
 		case 1:
-			fmt.Println("登录聊天室")
 			fmt.Println("请输入用户的ID号：")
 			//fmt.Scanf("%d\n", &userId)
 			fmt.Scanln(&userId)
@@ -38,8 +39,29 @@ func main() {
 			up.Login(userId, userPwd) // 虽然有返回err，但是不需要处理，因为在Login内已经有相关的处理（打印）
 
 		case 2:
-			fmt.Println("注册用户")
 			//loop = false
+			fmt.Println("请输入用户的ID号：")
+			//fmt.Scanf("%d\n", &userId)
+			fmt.Scanln(&userId)
+			fmt.Println("请输入用户的昵称：")
+			fmt.Scanln(&userName)
+
+			for {
+				fmt.Println("请输入用户的密码：")
+				//fmt.Scanf("%s\n", &userPwd)
+				fmt.Scanln(&userPwd)
+				fmt.Println("请再次输入密码：")
+				//fmt.Scanf("%s\n", &userPwd)
+				fmt.Scanln(&userPwd2)
+				if userPwd == userPwd2 {
+					// 两次密码相同，处理注册请求
+					up := &process.UserProcess{}
+					up.Register(userId, userPwd, userName) // 虽然有返回err，但是不需要处理，因为在Login内已经有相关的处理（打印）
+
+				} else {
+					fmt.Println("两次密码不相同，请重新输入")
+				}
+			}
 		case 3:
 			fmt.Println("退出系统")
 			loop = false

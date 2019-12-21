@@ -63,3 +63,34 @@ func (this *UserDao) Login(userId int, userPwd string) (user User, err error) {
 	}
 	return
 }
+
+func (this *UserDao) Register(user *User) (err error) { //userId int, userPwd string
+	//1. 验证用户名是否存在
+	conn := this.pool.Get()
+	defer conn.Close()
+	_, err = this.getUserById(conn, user.UserId)
+	if err == ERROR_USER_NOTEXISTS {
+		// 2. 不存在则允许注册，写入redis数据库
+		//1.创建一个User实例
+		//user := User{
+		//	UserId:   userId,
+		//	UserPwd:  userPwd,
+		//	UserName: "",
+		//}
+		data, err := json.Marshal(user)
+		if err != nil {
+			fmt.Println("json.Marshal err =", err)
+		} else {
+			fmt.Println("序列化后的数据：", data)
+		}
+		// 入库
+		_, err = conn.Do("Hset", "users", user.UserId, string(data))
+		if err != nil {
+			fmt.Println("保存注册信息出错 err =", err)
+		}
+		return nil // 这里的逻辑导致需要返回nil
+	} else {
+		err = ERROR_USER_EXISTS
+		return
+	}
+}
